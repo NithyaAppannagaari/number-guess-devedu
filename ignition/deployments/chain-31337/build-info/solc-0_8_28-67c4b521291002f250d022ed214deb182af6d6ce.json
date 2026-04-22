@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-67c4b521291002f250d022ed214deb182af6d6ce",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.4.0"
+  },
+  "userSourceNameMap": {
+    "contracts/NumberGuessing.sol": "project/contracts/NumberGuessing.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/NumberGuessing.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\n\n// every transaction has a sender, and we access it as msg.sender, which is of type address\n// we use msg.sender to track who the owner is (deployer of the contract) and send winnings to the write person / wallet\n\n// to accept eth, a function must be marked payable. when someone calls a payable function and sends ETH,\n// we read how much they sent with msg.value\n// to send, we do payable(address).transfer(amount)\n\n// we can also utilize reusable access controls in solidity via a modifier\n\npragma solidity ^0.8.28;\n\ncontract NumberGuessing {\n  bytes32 number_hash;\n  address public owner;\n\n  constructor() {\n    owner = msg.sender;\n  }\n\n  modifier onlyOwner() {\n    require(msg.sender == owner, \"not owner\");\n    _; // this means \"run the rest of the function\"\n  }\n\n  event CorrectGuess(address winner, uint amount);\n  event WrongGuess(address player);\n\n  function guess(uint number) payable public {\n    require(msg.value >= 0.001 ether, \"must deposit into pot to guess\");\n\n    bytes32 guess_hash = keccak256(abi.encodePacked(number));\n\n    if (number_hash == guess_hash) {\n        uint pot = address(this).balance;\n        payable(msg.sender).transfer(pot);\n        emit CorrectGuess(msg.sender, pot);\n    } else {\n        emit WrongGuess(msg.sender);\n    }\n  }\n\n  function setNumber(uint secret) onlyOwner public {\n    number_hash = keccak256(abi.encodePacked(secret));\n  }\n  \n}\n"
+      }
+    }
+  }
+}
